@@ -3,20 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jollibee Bee Fly - Optimized</title>
+    <title>Jollibee Fly - Mobile Fix</title>
     <style>
         :root { --red: #e31837; --yellow: #ffc425; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #333; font-family: sans-serif; user-select: none; touch-action: none; }
-        #game-container { position: relative; width: 100%; max-width: 500px; height: 100%; margin: 0 auto; background: linear-gradient(to bottom, #87CEEB, #E0F6FF); overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #f0f0f0; font-family: -apple-system, sans-serif; user-select: none; touch-action: none; }
+        
+        #game-container { position: relative; width: 100%; max-width: 500px; height: 100%; margin: 0 auto; background: #87CEEB; overflow: hidden; }
         canvas { display: block; width: 100%; height: 100%; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.6); color: white; z-index: 10; text-align: center; }
+
+        /* Giao diện Menu - Đảm bảo nằm trên cùng */
+        .overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            background: rgba(0, 0, 0, 0.8); color: white; z-index: 999; text-align: center; 
+            padding: 20px;
+        }
         .hidden { display: none !important; }
-        h1 { font-size: 2.5rem; color: var(--yellow); margin: 0; text-shadow: 2px 2px #000; }
-        .btn { background: var(--red); color: white; border: 3px solid var(--yellow); padding: 12px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 0 #a01026; }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
-        #hud { position: absolute; top: 15px; width: 100%; display: flex; justify-content: space-around; z-index: 5; color: var(--red); font-weight: bold; font-size: 1.1rem; text-shadow: 1px 1px white; pointer-events: none; }
+
+        h1 { font-size: 2.5rem; color: var(--yellow); margin: 0 0 10px 0; text-shadow: 2px 2px #000; }
+        p { font-size: 1.1rem; margin-bottom: 20px; }
+
+        /* Nút bấm thiết kế riêng cho Mobile */
+        .btn-ui { 
+            background: var(--red); color: white; border: 4px solid var(--yellow); 
+            padding: 18px 45px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; 
+            cursor: pointer; box-shadow: 0 6px 0 #a01026;
+            pointer-events: auto; /* Ép buộc nhận diện cảm ứng */
+            touch-action: manipulation;
+        }
+        .btn-ui:active { transform: translateY(4px); box-shadow: none; }
+
+        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 10; color: var(--red); font-weight: bold; font-size: 1.2rem; text-shadow: 1px 1px white; pointer-events: none; }
         .flash { animation: flash-red 0.1s; }
-        @keyframes flash-red { from { background: rgba(227, 24, 55, 0.5); } to { background: transparent; } }
+        @keyframes flash-red { from { background: rgba(227, 24, 55, 0.6); } to { background: transparent; } }
     </style>
 </head>
 <body>
@@ -27,17 +47,19 @@
         <div id="level-display">Gà Giòn Vui Vẻ</div>
     </div>
 
+    <!-- Màn hình khởi đầu -->
     <div id="start-screen" class="overlay">
-        <div style="font-size: 60px;">🐝</div>
+        <div style="font-size: 70px; margin-bottom: 10px;">🐝</div>
         <h1>JOLLIBEE FLY</h1>
-        <p>Chạm để bay!</p>
-        <button class="btn" onclick="startGame()">BẮT ĐẦU</button>
+        <p>Giúp Ong Jollibee vượt chướng ngại vật</p>
+        <div class="btn-ui" id="start-btn">BẮT ĐẦU</div>
     </div>
 
+    <!-- Màn hình Game Over -->
     <div id="game-over-screen" class="overlay hidden">
         <h1>GAME OVER</h1>
-        <p id="final-score" style="font-size: 1.5rem;"></p>
-        <button class="btn" onclick="startGame()">CHƠI LẠI</button>
+        <p id="final-score" style="font-size: 1.6rem; color: var(--yellow); font-weight: bold;"></p>
+        <div class="btn-ui" id="restart-btn">CHƠI LẠI</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -48,39 +70,28 @@
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('game-container');
     
-    // Audio context (Web Audio API)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function sound(freq, type, dur) {
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = type; o.frequency.value = freq;
-        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime + dur);
+    // Hệ thống âm thanh
+    let audioCtx = null;
+    function playSfx(freq, type, dur) {
+        if (!audioCtx) return;
+        try {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = type; o.frequency.value = freq;
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + dur);
+        } catch(e) {}
     }
 
-    // Game Config
+    // Biến Game
     let lastTime = 0;
     let gameActive = false;
     let score = 0;
     let pipes = [];
-    let particles = [];
-    
-    const config = {
-        gravity: 0.25,
-        jump: -5.5,
-        pipeSpeed: 3,
-        pipeGap: 170,
-        pipeInterval: 1800, // miliseconds giữa 2 cột
-        lastPipeSpawn: 0
-    };
-
-    const bee = {
-        x: 60, y: 0, w: 38, h: 32,
-        vel: 0, rotation: 0,
-        // Hitbox nhỏ hơn hình ảnh để tạo cảm giác dễ chơi (Forgiving Hitbox)
-        hitW: 24, hitH: 22 
-    };
+    const config = { gravity: 0.25, jump: -5.5, pipeSpeed: 3, pipeGap: 180, pipeInterval: 1800, lastPipeSpawn: 0 };
+    const bee = { x: 60, y: 0, w: 40, h: 34, vel: 0, hitW: 24, hitH: 22 };
 
     function resize() {
         canvas.width = container.clientWidth;
@@ -89,15 +100,41 @@
     window.addEventListener('resize', resize);
     resize();
 
+    // XỬ LÝ NÚT BẤM (Dùng touchstart để nhạy nhất trên điện thoại)
+    function handleButtonClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Khởi tạo âm thanh khi người dùng chạm lần đầu
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        startGame();
+    }
+
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Lắng nghe cả touch và click để chắc chắn 100% hoạt động
+    startBtn.addEventListener('touchstart', handleButtonClick, {passive: false});
+    startBtn.addEventListener('click', handleButtonClick);
+
+    restartBtn.addEventListener('touchstart', handleButtonClick, {passive: false});
+    restartBtn.addEventListener('click', handleButtonClick);
+
     function startGame() {
         score = 0;
         bee.y = canvas.height / 2;
         bee.vel = 0;
         pipes = [];
-        particles = [];
+        config.pipeSpeed = 3;
+        config.pipeGap = 180;
         config.lastPipeSpawn = performance.now();
         gameActive = true;
-        document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-over-screen').classList.add('hidden');
         updateHUD();
         requestAnimationFrame(gameLoop);
     }
@@ -105,85 +142,60 @@
     function jump() {
         if (!gameActive) return;
         bee.vel = config.jump;
-        sound(400, 'sine', 0.1);
+        playSfx(400, 'sine', 0.1);
     }
 
-    window.addEventListener('mousedown', (e) => { if(e.button===0) jump() });
-    window.addEventListener('touchstart', (e) => { jump(); e.preventDefault(); }, {passive: false});
+    // Điều khiển Ong bay (Chỉ nhận diện khi không bấm vào nút)
+    window.addEventListener('touchstart', (e) => {
+        if (e.target.classList.contains('btn-ui')) return;
+        if (gameActive) {
+            jump();
+            if(e.cancelable) e.preventDefault();
+        }
+    }, {passive: false});
 
-    function spawnPipe() {
-        const minH = 80;
-        const maxH = canvas.height - config.pipeGap - minH;
-        const topH = Math.floor(Math.random() * (maxH - minH + 1)) + minH;
-        pipes.push({
-            x: canvas.width,
-            top: topH,
-            w: 60,
-            passed: false
-        });
-    }
+    window.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('btn-ui')) return;
+        if (gameActive && e.button === 0) jump();
+    });
 
     function updateHUD() {
         document.getElementById('score-display').innerText = `Điểm: ${score}`;
-        let lvl = "Gà Giòn";
-        if(score > 10) { lvl = "Mì Ý Jolly"; config.pipeSpeed = 3.8; config.pipeGap = 155; }
-        if(score > 25) { lvl = "Kem Vani"; config.pipeSpeed = 4.5; config.pipeGap = 140; }
+        let lvl = "Gà Giòn Vui Vẻ";
+        if(score > 10) { lvl = "Mì Ý Jolly"; config.pipeSpeed = 3.8; config.pipeGap = 165; }
+        if(score > 25) { lvl = "Kem Vani"; config.pipeSpeed = 4.5; config.pipeGap = 150; }
         document.getElementById('level-display').innerText = lvl;
-    }
-
-    function checkCollision(p) {
-        // Center-based hitbox check
-        const bx = bee.x + bee.w/2;
-        const by = bee.y + bee.h/2;
-        const bw = bee.hitW;
-        const bh = bee.hitH;
-
-        if (bx + bw/2 > p.x && bx - bw/2 < p.x + p.w) {
-            if (by - bh/2 < p.top || by + bh/2 > p.top + config.pipeGap) {
-                return true;
-            }
-        }
-        return false;
     }
 
     function gameLoop(timestamp) {
         if (!gameActive) return;
-        
-        // Tính toán Delta Time để ổn định tốc độ
-        const dt = (timestamp - lastTime) / 16; 
+        const dt = (timestamp - lastTime) / 16.6; 
         lastTime = timestamp;
-        if (dt > 2) return requestAnimationFrame(gameLoop); // Bỏ qua nếu lag nặng
+        if (dt > 3) return requestAnimationFrame(gameLoop);
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Ong vật lý
+        // Vật lý ong
         bee.vel += config.gravity * dt;
         bee.y += bee.vel * dt;
-        bee.rotation = Math.min(Math.PI/6, Math.max(-Math.PI/8, bee.vel * 0.05));
 
         // Vẽ Ong
         ctx.save();
         ctx.translate(bee.x + bee.w/2, bee.y + bee.h/2);
-        ctx.rotate(bee.rotation);
-        // Thân
+        ctx.rotate(Math.min(Math.PI/6, Math.max(-Math.PI/8, bee.vel * 0.05)));
         ctx.fillStyle = '#ffc425';
         ctx.beginPath(); ctx.ellipse(0, 0, bee.w/2, bee.h/2, 0, 0, Math.PI*2); ctx.fill();
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
-        // Sọc
-        ctx.fillStyle = '#000';
-        ctx.fillRect(-4, -bee.h/2+2, 4, bee.h-4);
-        ctx.fillRect(4, -bee.h/2+5, 4, bee.h-10);
-        // Cánh
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.beginPath(); ctx.ellipse(-5, -12, 10, 12, -0.5, 0, Math.PI*2); ctx.fill();
-        // Mào đỏ Jollibee
-        ctx.fillStyle = '#e31837';
-        ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(12, -12); ctx.lineTo(6, -20); ctx.fill();
+        ctx.fillStyle = '#000'; ctx.fillRect(-4, -bee.h/2+2, 4, bee.h-4);
+        ctx.fillStyle = '#e31837'; ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(12, -12); ctx.lineTo(6, -20); ctx.fill();
         ctx.restore();
 
-        // Xử lý Cột
+        // Cột
         if (timestamp - config.lastPipeSpawn > config.pipeInterval / (config.pipeSpeed/3)) {
-            spawnPipe();
+            const minH = 80;
+            const maxH = canvas.height - config.pipeGap - minH;
+            const topH = Math.floor(Math.random() * (maxH - minH + 1)) + minH;
+            pipes.push({ x: canvas.width, top: topH, w: 60, passed: false });
             config.lastPipeSpawn = timestamp;
         }
 
@@ -191,46 +203,42 @@
             let p = pipes[i];
             p.x -= config.pipeSpeed * dt;
 
-            // Vẽ cột Jollibee
             ctx.fillStyle = '#e31837';
             ctx.strokeStyle = '#ffc425';
             ctx.lineWidth = 4;
-            // Cột trên
             ctx.fillRect(p.x, 0, p.w, p.top);
             ctx.strokeRect(p.x, 0, p.w, p.top);
-            // Cột dưới
             ctx.fillRect(p.x, p.top + config.pipeGap, p.w, canvas.height);
             ctx.strokeRect(p.x, p.top + config.pipeGap, p.w, canvas.height);
 
-            if (checkCollision(p)) {
-                gameOver();
+            // Check va chạm
+            const bx = bee.x + bee.w/2;
+            const by = bee.y + bee.h/2;
+            if (bx + bee.hitW/2 > p.x && bx - bee.hitW/2 < p.x + p.w) {
+                if (by - bee.hitH/2 < p.top || by + bee.hitH/2 > p.top + config.pipeGap) gameOver();
             }
 
             if (!p.passed && p.x + p.w < bee.x) {
                 p.passed = true;
                 score++;
-                sound(800, 'triangle', 0.2);
+                playSfx(800, 'triangle', 0.2);
                 updateHUD();
             }
-
-            if (p.x + p.w < 0) pipes.splice(i, 1);
+            if (p.x + p.w < -60) pipes.splice(i, 1);
         }
 
-        // Chạm biên
-        if (bee.y + bee.h > canvas.height || bee.y < -20) gameOver();
-
+        if (bee.y + bee.h > canvas.height || bee.y < -50) gameOver();
         requestAnimationFrame(gameLoop);
     }
 
     function gameOver() {
         gameActive = false;
-        sound(150, 'sawtooth', 0.4);
+        playSfx(150, 'sawtooth', 0.4);
         container.classList.add('flash');
         setTimeout(() => container.classList.remove('flash'), 100);
         document.getElementById('game-over-screen').classList.remove('hidden');
         document.getElementById('final-score').innerText = `Bạn đạt ${score} điểm!`;
     }
-
 </script>
 </body>
 </html>
