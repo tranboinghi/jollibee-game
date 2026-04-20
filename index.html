@@ -3,196 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jollibee Bee Fly</title>
+    <title>Jollibee Bee Fly - Optimized</title>
     <style>
-        :root {
-            --jollibee-red: #e31837;
-            --jollibee-yellow: #ffc425;
-            --jollibee-white: #ffffff;
-        }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #f0f0f0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-            touch-action: none;
-        }
-
-        #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            height: 100%;
-            margin: 0 auto;
-            background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
-            overflow: hidden;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* UI Overlays */
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            z-index: 10;
-            text-align: center;
-            transition: opacity 0.3s;
-        }
-
+        :root { --red: #e31837; --yellow: #ffc425; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #333; font-family: sans-serif; user-select: none; touch-action: none; }
+        #game-container { position: relative; width: 100%; max-width: 500px; height: 100%; margin: 0 auto; background: linear-gradient(to bottom, #87CEEB, #E0F6FF); overflow: hidden; }
+        canvas { display: block; width: 100%; height: 100%; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.6); color: white; z-index: 10; text-align: center; }
         .hidden { display: none !important; }
-
-        h1 { font-size: 3rem; color: var(--jollibee-yellow); margin-bottom: 10px; text-shadow: 2px 2px #000; }
-        p { font-size: 1.2rem; margin-bottom: 20px; }
-
-        .btn {
-            background-color: var(--jollibee-red);
-            color: white;
-            border: 4px solid var(--jollibee-yellow);
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            margin: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .btn:active { transform: scale(0.95); }
-
-        #hud {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            pointer-events: none;
-            z-index: 5;
-            color: var(--jollibee-red);
-            font-weight: bold;
-            font-size: 1.2rem;
-            text-shadow: 1px 1px white;
-        }
-
-        .flash-red {
-            animation: flash 0.2s infinite;
-        }
-
-        @keyframes flash {
-            0% { background: rgba(227, 24, 55, 0); }
-            50% { background: rgba(227, 24, 55, 0.3); }
-            100% { background: rgba(227, 24, 55, 0); }
-        }
+        h1 { font-size: 2.5rem; color: var(--yellow); margin: 0; text-shadow: 2px 2px #000; }
+        .btn { background: var(--red); color: white; border: 3px solid var(--yellow); padding: 12px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 0 #a01026; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+        #hud { position: absolute; top: 15px; width: 100%; display: flex; justify-content: space-around; z-index: 5; color: var(--red); font-weight: bold; font-size: 1.1rem; text-shadow: 1px 1px white; pointer-events: none; }
+        .flash { animation: flash-red 0.1s; }
+        @keyframes flash-red { from { background: rgba(227, 24, 55, 0.5); } to { background: transparent; } }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <!-- HUD -->
     <div id="hud">
         <div id="score-display">Điểm: 0</div>
-        <div id="level-display">Level: Gà Giòn</div>
+        <div id="level-display">Gà Giòn Vui Vẻ</div>
     </div>
 
-    <!-- Start Screen -->
     <div id="start-screen" class="overlay">
-        <div style="font-size: 80px; margin-bottom: 20px;">🐝</div>
+        <div style="font-size: 60px;">🐝</div>
         <h1>JOLLIBEE FLY</h1>
-        <p>Chạm để bay qua chướng ngại vật!</p>
+        <p>Chạm để bay!</p>
         <button class="btn" onclick="startGame()">BẮT ĐẦU</button>
     </div>
 
-    <!-- Game Over Screen -->
     <div id="game-over-screen" class="overlay hidden">
-        <h1 style="color: white;">GAME OVER</h1>
-        <p id="final-score-text">Bạn đạt 0 điểm!</p>
+        <h1>GAME OVER</h1>
+        <p id="final-score" style="font-size: 1.5rem;"></p>
         <button class="btn" onclick="startGame()">CHƠI LẠI</button>
-        <button class="btn" id="claim-btn" style="background-color: #28a745; display: none;" onclick="showReward()">NHẬN QUÀ</button>
-    </div>
-
-    <!-- Reward Screen -->
-    <div id="reward-screen" class="overlay hidden">
-        <h1 style="color: var(--jollibee-yellow);">CHÚC MỪNG!</h1>
-        <p id="reward-level-name">Bạn đã đạt Level Master</p>
-        <p id="reward-desc" style="font-style: italic;">Phần thưởng: 1 Voucher Gà Giòn Vui Vẻ!</p>
-        <button class="btn" onclick="location.reload()">NHẬN NGAY</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 </div>
 
 <script>
-    /** --- AUDIO SYSTEM --- **/
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playTone(freq, type, duration) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
-
-    const sounds = {
-        tap: () => playTone(400, 'sine', 0.1),
-        score: () => playTone(800, 'triangle', 0.2),
-        fail: () => playTone(150, 'sawtooth', 0.5)
-    };
-
-    /** --- GAME ENGINE --- **/
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('game-container');
     
-    let animationId;
+    // Audio context (Web Audio API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function sound(freq, type, dur) {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    }
+
+    // Game Config
+    let lastTime = 0;
     let gameActive = false;
     let score = 0;
-    let levelIndex = 0;
-
-    const levels = [
-        { name: "Gà Giòn Vui Vẻ", threshold: 0, speed: 3, gap: 180, color: '#e31837' },
-        { name: "Mì Ý Jolly", threshold: 10, speed: 4.5, gap: 160, color: '#ffc425' },
-        { name: "Kem Vani", threshold: 25, speed: 6, gap: 140, color: '#ffffff' },
-        { name: "Bậc Thầy Jollibee", threshold: 50, speed: 8, gap: 120, color: '#000000' }
-    ];
-
-    // Bee state
-    const bee = {
-        x: 50,
-        y: 300,
-        w: 40,
-        h: 35,
-        gravity: 0.6,
-        velocity: 0,
-        jump: -8,
-        rotation: 0
-    };
-
     let pipes = [];
     let particles = [];
+    
+    const config = {
+        gravity: 0.25,
+        jump: -5.5,
+        pipeSpeed: 3,
+        pipeGap: 170,
+        pipeInterval: 1800, // miliseconds giữa 2 cột
+        lastPipeSpawn: 0
+    };
+
+    const bee = {
+        x: 60, y: 0, w: 38, h: 32,
+        vel: 0, rotation: 0,
+        // Hitbox nhỏ hơn hình ảnh để tạo cảm giác dễ chơi (Forgiving Hitbox)
+        hitW: 24, hitH: 22 
+    };
 
     function resize() {
         canvas.width = container.clientWidth;
@@ -201,239 +89,148 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Controls
-    function handleInput(e) {
-        if (!gameActive) return;
-        if (e.cancelable) e.preventDefault();
-        bee.velocity = bee.jump;
-        sounds.tap();
-        createBurst(bee.x, bee.y, '#fff', 5);
-    }
-    window.addEventListener('touchstart', handleInput, { passive: false });
-    window.addEventListener('mousedown', handleInput);
-    window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleInput(e); });
-
-    function createBurst(x, y, color, count) {
-        for(let i=0; i<count; i++) {
-            particles.push({
-                x, y,
-                vx: (Math.random() - 0.5) * 10,
-                vy: (Math.random() - 0.5) * 10,
-                life: 1,
-                color: color
-            });
-        }
-    }
-
-    function spawnPipe() {
-        const currentLevel = levels[levelIndex];
-        const minPipeHeight = 50;
-        const spacing = currentLevel.gap;
-        const range = canvas.height - spacing - minPipeHeight * 2;
-        const topHeight = Math.floor(Math.random() * range) + minPipeHeight;
-        
-        pipes.push({
-            x: canvas.width,
-            top: topHeight,
-            bottom: canvas.height - topHeight - spacing,
-            passed: false,
-            width: 60
-        });
-    }
-
     function startGame() {
         score = 0;
-        levelIndex = 0;
+        bee.y = canvas.height / 2;
+        bee.vel = 0;
         pipes = [];
         particles = [];
-        bee.y = canvas.height / 2;
-        bee.velocity = 0;
+        config.lastPipeSpawn = performance.now();
         gameActive = true;
-        
         document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
-        document.getElementById('claim-btn').style.display = 'none';
         updateHUD();
-        
-        if (animationId) cancelAnimationFrame(animationId);
-        gameLoop();
-        spawnPipe();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function jump() {
+        if (!gameActive) return;
+        bee.vel = config.jump;
+        sound(400, 'sine', 0.1);
+    }
+
+    window.addEventListener('mousedown', (e) => { if(e.button===0) jump() });
+    window.addEventListener('touchstart', (e) => { jump(); e.preventDefault(); }, {passive: false});
+
+    function spawnPipe() {
+        const minH = 80;
+        const maxH = canvas.height - config.pipeGap - minH;
+        const topH = Math.floor(Math.random() * (maxH - minH + 1)) + minH;
+        pipes.push({
+            x: canvas.width,
+            top: topH,
+            w: 60,
+            passed: false
+        });
     }
 
     function updateHUD() {
         document.getElementById('score-display').innerText = `Điểm: ${score}`;
-        document.getElementById('level-display').innerText = `Level: ${levels[levelIndex].name}`;
+        let lvl = "Gà Giòn";
+        if(score > 10) { lvl = "Mì Ý Jolly"; config.pipeSpeed = 3.8; config.pipeGap = 155; }
+        if(score > 25) { lvl = "Kem Vani"; config.pipeSpeed = 4.5; config.pipeGap = 140; }
+        document.getElementById('level-display').innerText = lvl;
+    }
+
+    function checkCollision(p) {
+        // Center-based hitbox check
+        const bx = bee.x + bee.w/2;
+        const by = bee.y + bee.h/2;
+        const bw = bee.hitW;
+        const bh = bee.hitH;
+
+        if (bx + bw/2 > p.x && bx - bw/2 < p.x + p.w) {
+            if (by - bh/2 < p.top || by + bh/2 > p.top + config.pipeGap) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function gameLoop(timestamp) {
+        if (!gameActive) return;
+        
+        // Tính toán Delta Time để ổn định tốc độ
+        const dt = (timestamp - lastTime) / 16; 
+        lastTime = timestamp;
+        if (dt > 2) return requestAnimationFrame(gameLoop); // Bỏ qua nếu lag nặng
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Ong vật lý
+        bee.vel += config.gravity * dt;
+        bee.y += bee.vel * dt;
+        bee.rotation = Math.min(Math.PI/6, Math.max(-Math.PI/8, bee.vel * 0.05));
+
+        // Vẽ Ong
+        ctx.save();
+        ctx.translate(bee.x + bee.w/2, bee.y + bee.h/2);
+        ctx.rotate(bee.rotation);
+        // Thân
+        ctx.fillStyle = '#ffc425';
+        ctx.beginPath(); ctx.ellipse(0, 0, bee.w/2, bee.h/2, 0, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+        // Sọc
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-4, -bee.h/2+2, 4, bee.h-4);
+        ctx.fillRect(4, -bee.h/2+5, 4, bee.h-10);
+        // Cánh
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath(); ctx.ellipse(-5, -12, 10, 12, -0.5, 0, Math.PI*2); ctx.fill();
+        // Mào đỏ Jollibee
+        ctx.fillStyle = '#e31837';
+        ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(12, -12); ctx.lineTo(6, -20); ctx.fill();
+        ctx.restore();
+
+        // Xử lý Cột
+        if (timestamp - config.lastPipeSpawn > config.pipeInterval / (config.pipeSpeed/3)) {
+            spawnPipe();
+            config.lastPipeSpawn = timestamp;
+        }
+
+        for (let i = pipes.length - 1; i >= 0; i--) {
+            let p = pipes[i];
+            p.x -= config.pipeSpeed * dt;
+
+            // Vẽ cột Jollibee
+            ctx.fillStyle = '#e31837';
+            ctx.strokeStyle = '#ffc425';
+            ctx.lineWidth = 4;
+            // Cột trên
+            ctx.fillRect(p.x, 0, p.w, p.top);
+            ctx.strokeRect(p.x, 0, p.w, p.top);
+            // Cột dưới
+            ctx.fillRect(p.x, p.top + config.pipeGap, p.w, canvas.height);
+            ctx.strokeRect(p.x, p.top + config.pipeGap, p.w, canvas.height);
+
+            if (checkCollision(p)) {
+                gameOver();
+            }
+
+            if (!p.passed && p.x + p.w < bee.x) {
+                p.passed = true;
+                score++;
+                sound(800, 'triangle', 0.2);
+                updateHUD();
+            }
+
+            if (p.x + p.w < 0) pipes.splice(i, 1);
+        }
+
+        // Chạm biên
+        if (bee.y + bee.h > canvas.height || bee.y < -20) gameOver();
+
+        requestAnimationFrame(gameLoop);
     }
 
     function gameOver() {
         gameActive = false;
-        sounds.fail();
-        cancelAnimationFrame(animationId);
-        
+        sound(150, 'sawtooth', 0.4);
+        container.classList.add('flash');
+        setTimeout(() => container.classList.remove('flash'), 100);
         document.getElementById('game-over-screen').classList.remove('hidden');
-        document.getElementById('final-score-text').innerText = `Bạn đạt ${score} điểm!`;
-        
-        // If they reached at least level 2, show reward button
-        if (levelIndex >= 1) {
-            document.getElementById('claim-btn').style.display = 'inline-block';
-        }
+        document.getElementById('final-score').innerText = `Bạn đạt ${score} điểm!`;
     }
 
-    function showReward() {
-        document.getElementById('game-over-screen').classList.add('hidden');
-        document.getElementById('reward-screen').classList.remove('hidden');
-        document.getElementById('reward-level-name').innerText = `Bạn đã đạt ${levels[levelIndex].name}`;
-    }
-
-    function drawBee() {
-        ctx.save();
-        ctx.translate(bee.x + bee.w/2, bee.y + bee.h/2);
-        bee.rotation = Math.min(Math.PI/4, Math.max(-Math.PI/4, bee.velocity * 0.05));
-        ctx.rotate(bee.rotation);
-
-        // Body (Yellow)
-        ctx.fillStyle = '#ffc425';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, bee.w/2, bee.h/2, 0, 0, Math.PI*2);
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Stripes (Black)
-        ctx.fillStyle = '#000';
-        ctx.fillRect(-5, -bee.h/2 + 2, 5, bee.h - 4);
-        ctx.fillRect(5, -bee.h/2 + 5, 5, bee.h - 10);
-
-        // Wings (White)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.beginPath();
-        ctx.ellipse(-5, -15, 10, 15, -Math.PI/4, 0, Math.PI*2);
-        ctx.fill();
-
-        // Eye
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.arc(10, -5, 3, 0, Math.PI*2);
-        ctx.fill();
-        
-        // Red Hat (Jollibee vibe)
-        ctx.fillStyle = '#e31837';
-        ctx.beginPath();
-        ctx.moveTo(5, -15);
-        ctx.lineTo(15, -15);
-        ctx.lineTo(10, -22);
-        ctx.fill();
-
-        ctx.restore();
-    }
-
-    function gameLoop() {
-        if (!gameActive) return;
-
-        // Clear Canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const currentLvl = levels[levelIndex];
-
-        // Background Motion (Simple Clouds)
-        ctx.fillStyle = "rgba(255,255,255,0.3)";
-        ctx.beginPath();
-        ctx.arc((Date.now()/50)%canvas.width, 100, 30, 0, Math.PI*2);
-        ctx.arc((Date.now()/50 + 40)%canvas.width, 110, 40, 0, Math.PI*2);
-        ctx.fill();
-
-        // Bee Physics
-        bee.velocity += bee.gravity;
-        bee.y += bee.velocity;
-
-        // Particles
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= 0.02;
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life;
-            ctx.fillRect(p.x, p.y, 4, 4);
-            if (p.life <= 0) particles.splice(i, 1);
-        }
-        ctx.globalAlpha = 1;
-
-        // Trail
-        if (Math.random() > 0.5) {
-            particles.push({
-                x: bee.x, y: bee.y + bee.h/2,
-                vx: -2, vy: (Math.random()-0.5)*2,
-                life: 0.5, color: '#ffc425'
-            });
-        }
-
-        // Draw Bee
-        drawBee();
-
-        // Pipes
-        if (pipes.length === 0 || pipes[pipes.length-1].x < canvas.width - 250) {
-            spawnPipe();
-        }
-
-        let danger = false;
-
-        for (let i = pipes.length - 1; i >= 0; i--) {
-            let p = pipes[i];
-            p.x -= currentLvl.speed;
-
-            // Draw Pipes (Jollibee Red)
-            ctx.fillStyle = '#e31837';
-            ctx.strokeStyle = '#ffc425';
-            ctx.lineWidth = 4;
-            // Top pipe
-            ctx.fillRect(p.x, 0, p.width, p.top);
-            ctx.strokeRect(p.x, 0, p.width, p.top);
-            // Bottom pipe
-            ctx.fillRect(p.x, canvas.height - p.bottom, p.width, p.bottom);
-            ctx.strokeRect(p.x, canvas.height - p.bottom, p.width, p.bottom);
-
-            // Collision Detection
-            const buffer = 5;
-            if (bee.x + bee.w - buffer > p.x && bee.x + buffer < p.x + p.width) {
-                if (bee.y + buffer < p.top || bee.y + bee.h - buffer > canvas.height - p.bottom) {
-                    gameOver();
-                }
-                danger = true;
-            }
-
-            // Score update
-            if (!p.passed && p.x + p.width < bee.x) {
-                p.passed = true;
-                score++;
-                sounds.score();
-                createBurst(bee.x + bee.w, bee.y, '#ffc425', 8);
-                
-                // Check Level Up
-                if (levelIndex < levels.length - 1 && score >= levels[levelIndex+1].threshold) {
-                    levelIndex++;
-                }
-                updateHUD();
-            }
-
-            // Remove off-screen pipes
-            if (p.x + p.width < 0) pipes.splice(i, 1);
-        }
-
-        // Screen Flash when close to pipes
-        if (danger) {
-            container.classList.add('flash-red');
-        } else {
-            container.classList.remove('flash-red');
-        }
-
-        // Floor/Ceiling collision
-        if (bee.y + bee.h > canvas.height || bee.y < 0) {
-            gameOver();
-        }
-
-        animationId = requestAnimationFrame(gameLoop);
-    }
 </script>
 </body>
 </html>
